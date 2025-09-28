@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Condividi Posizione</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .share-button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: transform 0.2s;
+            margin: 20px 0;
+        }
+        .share-button:hover {
+            transform: translateY(-2px);
+        }
+        .share-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        #status {
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .loading {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .info {
+            font-size: 14px;
+            color: #666;
+            margin-top: 15px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .location-data {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 12px;
+            text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📍 Condividi Posizione</h1>
+        <p>Un amico vuole sapere dove ti trovi. Clicca per condividere la tua posizione.</p>
+        
+        <button class="share-button" onclick="shareLocation()" id="shareBtn">
+            📤 Condividi la mia posizione
+        </button>
+        
+        <div id="status"></div>
+        
+        <div id="locationData" class="location-data" style="display:none;"></div>
+        
+        <div class="info">
+            <small>I tuoi dati di posizione verranno condivisi solo se dai il consenso.</small>
+        </div>
+    </div>
+
+    <script>
+        // ID univoco per questa sessione (simulato)
+        const sessionId = 'session_' + Date.now();
+        
+        function shareLocation() {
+            const statusDiv = document.getElementById('status');
+            const button = document.getElementById('shareBtn');
+            const locationDiv = document.getElementById('locationData');
+            
+            if (!navigator.geolocation) {
+                showStatus("La geolocalizzazione non è supportata da questo browser.", "error");
+                return;
+            }
+            
+            button.disabled = true;
+            showStatus('<div class="spinner"></div>Ottenendo la tua posizione...', "loading");
+            
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const locationData = {
+                        sessionId: sessionId,
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy,
+                        timestamp: new Date().toISOString(),
+                        userAgent: navigator.userAgent,
+                        ip: 'Rilevato dal server',
+                        googleMapsLink: `https://www.google.com/maps?q=${position.coords.latitude},${position.coords.longitude}&z=15`
+                    };
+                    
+                    // Mostra i dati nella pagina (per il demo)
+                    locationDiv.innerHTML = `
+                        <strong>Dati inviati al mittente:</strong><br>
+                        Session ID: ${locationData.sessionId}<br>
+                        Latitudine: ${locationData.latitude}<br>
+                        Longitudine: ${locationData.longitude}<br>
+                        Precisione: ${locationData.accuracy} metri<br>
+                        Timestamp: ${new Date(locationData.timestamp).toLocaleString('it-IT')}<br>
+                        User Agent: ${locationData.userAgent.substring(0, 60)}...<br>
+                        Google Maps: <a href="${locationData.googleMapsLink}" target="_blank">Visualizza</a>
+                    `;
+                    locationDiv.style.display = 'block';
+                    
+                    // Simula l'invio al server (qui useresti un vero endpoint)
+                    sendLocationToServer(locationData);
+                    
+                    showStatus("✅ Posizione condivisa con successo!", "success");
+                    button.disabled = false;
+                },
+                function(error) {
+                    button.disabled = false;
+                    let errorMessage = "";
+                    
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = "❌ Permesso negato. Non posso accedere alla posizione.";
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = "❌ Posizione non disponibile.";
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = "❌ Richiesta scaduta. Riprova.";
+                            break;
+                        default:
+                            errorMessage = "❌ Errore sconosciuto.";
+                            break;
+                    }
+                    
+                    showStatus(errorMessage, "error");
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 60000
+                }
+            );
+        }
+        
+        function sendLocationToServer(locationData) {
+            // METODO 1: Usando webhook.site (per test)
+            const webhookUrl = 'https://webhook.site/30a5328e-2df5-4dc3-aff5-6182aad75be6';
+            
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(locationData)
+            })
+            .then(response => {
+                console.log('Dati inviati al webhook:', locationData);
+            })
+            .catch(error => {
+                console.error('Errore invio:', error);
+                // Fallback: invia via email usando un servizio
+                sendViaEmail(locationData);
+            });
+        }
+        
+        function sendViaEmail(locationData) {
+            // METODO 2: Usando EmailJS (alternativa)
+            // Questo aprirà il client email predefinito
+            const subject = encodeURIComponent('Posizione condivisa - ' + sessionId);
+            const body = encodeURIComponent(`
+Nuova posizione ricevuta:
+
+Session ID: ${locationData.sessionId}
+Latitudine: ${locationData.latitude}
+Longitudine: ${locationData.longitude}
+Precisione: ${locationData.accuracy} metri
+Timestamp: ${new Date(locationData.timestamp).toLocaleString('it-IT')}
+Google Maps: ${locationData.googleMapsLink}
+User Agent: ${locationData.userAgent}
+            `);
+            
+            // Sostituisci con la tua email
+            const mailtoLink = `mailto:tuaemail@example.com?subject=${subject}&body=${body}`;
+            
+            // Apre il client email (opzionale)
+            // window.open(mailtoLink);
+        }
+        
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = message;
+            statusDiv.className = type;
+            statusDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
