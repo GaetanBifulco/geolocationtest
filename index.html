@@ -86,16 +86,24 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .location-data {
+        .location-display {
             background: #f8f9fa;
-            padding: 15px;
+            padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
-            font-family: monospace;
-            font-size: 12px;
             text-align: left;
-            max-height: 200px;
+            max-height: 300px;
             overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+            border: 2px solid #28a745;
+        }
+        .console-tip {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #007bff;
         }
     </style>
 </head>
@@ -104,13 +112,16 @@
         <h1>📍 Condividi Posizione</h1>
         <p>Un amico vuole sapere dove ti trovi. Clicca per condividere la tua posizione.</p>
         
+        <div class="console-tip">
+            <strong>💡 Per il prof:</strong> Apri la Console (F12 → Console) per vedere i dati tecnici completi!
+        </div>
+        
         <button class="share-button" onclick="shareLocation()" id="shareBtn">
             📤 Condividi la mia posizione
         </button>
         
         <div id="status"></div>
-        
-        <div id="locationData" class="location-data" style="display:none;"></div>
+        <div id="locationDisplay" class="location-display" style="display:none;"></div>
         
         <div class="info">
             <small>I tuoi dati di posizione verranno condivisi solo se dai il consenso.</small>
@@ -118,13 +129,13 @@
     </div>
 
     <script>
-        // ID univoco per questa sessione (simulato)
-        const sessionId = 'session_' + Date.now();
+        // ID univoco per questa sessione
+        const sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         
         function shareLocation() {
             const statusDiv = document.getElementById('status');
             const button = document.getElementById('shareBtn');
-            const locationDiv = document.getElementById('locationData');
+            const displayDiv = document.getElementById('locationDisplay');
             
             if (!navigator.geolocation) {
                 showStatus("La geolocalizzazione non è supportata da questo browser.", "error");
@@ -141,30 +152,83 @@
                         latitude: position.coords.latitude,
                         longitude: position.coords.longitude,
                         accuracy: position.coords.accuracy,
+                        altitude: position.coords.altitude,
+                        altitudeAccuracy: position.coords.altitudeAccuracy,
+                        heading: position.coords.heading,
+                        speed: position.coords.speed,
                         timestamp: new Date().toISOString(),
+                        timestampLocal: new Date().toLocaleString('it-IT'),
                         userAgent: navigator.userAgent,
-                        ip: 'Rilevato dal server',
-                        googleMapsLink: `https://www.google.com/maps?q=${position.coords.latitude},${position.coords.longitude}&z=15`
+                        language: navigator.language,
+                        platform: navigator.platform,
+                        cookieEnabled: navigator.cookieEnabled,
+                        onLine: navigator.onLine,
+                        screenWidth: screen.width,
+                        screenHeight: screen.height,
+                        windowWidth: window.innerWidth,
+                        windowHeight: window.innerHeight,
+                        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                        googleMapsLink: `https://www.google.com/maps?q=${position.coords.latitude},${position.coords.longitude}&z=15`,
+                        url: window.location.href,
+                        referrer: document.referrer
                     };
                     
-                    // Mostra i dati nella pagina (per il demo)
-                    locationDiv.innerHTML = `
-                        <strong>Dati inviati al mittente:</strong><br>
-                        Session ID: ${locationData.sessionId}<br>
-                        Latitudine: ${locationData.latitude}<br>
-                        Longitudine: ${locationData.longitude}<br>
-                        Precisione: ${locationData.accuracy} metri<br>
-                        Timestamp: ${new Date(locationData.timestamp).toLocaleString('it-IT')}<br>
-                        User Agent: ${locationData.userAgent.substring(0, 60)}...<br>
-                        Google Maps: <a href="${locationData.googleMapsLink}" target="_blank">Visualizza</a>
+                    // STAMPA TUTTI I DATI NELLA CONSOLE
+                    console.clear();
+                    console.log('🎯 ==========================================');
+                    console.log('📍 DATI GEOLOCALIZZAZIONE RACCOLTI');
+                    console.log('🎯 ==========================================');
+                    console.log('🔹 Session ID:', locationData.sessionId);
+                    console.log('🌍 Latitudine:', locationData.latitude);
+                    console.log('🌍 Longitudine:', locationData.longitude);
+                    console.log('📏 Precisione:', locationData.accuracy + ' metri');
+                    console.log('🏔️  Altitudine:', locationData.altitude + ' metri');
+                    console.log('⏰ Timestamp:', locationData.timestamp);
+                    console.log('📅 Data locale:', locationData.timestampLocal);
+                    console.log('🌐 Fuso orario:', locationData.timezone);
+                    console.log('🖥️  Dispositivo:', locationData.platform);
+                    console.log('🌐 Lingua:', locationData.language);
+                    console.log('📱 Schermo:', locationData.screenWidth + 'x' + locationData.screenHeight);
+                    console.log('🌐 User Agent:', locationData.userAgent);
+                    console.log('🔗 Google Maps:', locationData.googleMapsLink);
+                    console.log('📍 URL pagina:', locationData.url);
+                    console.log('🔙 Referrer:', locationData.referrer);
+                    console.log('🎯 ==========================================');
+                    
+                    // Mostra i dati anche nella pagina
+                    displayDiv.innerHTML = `
+                        <strong>✅ POSIZIONE OTTENUTA CON SUCCESSO!</strong><br><br>
+                        <strong>📍 Coordinate:</strong><br>
+                        Latitudine: <strong>${locationData.latitude}</strong><br>
+                        Longitudine: <strong>${locationData.longitude}</strong><br>
+                        Precisione: <strong>${locationData.accuracy} metri</strong><br><br>
+                        
+                        <strong>⏰ Informazioni temporali:</strong><br>
+                        Timestamp: ${locationData.timestampLocal}<br>
+                        Fuso orario: ${locationData.timezone}<br><br>
+                        
+                        <strong>🖥️ Informazioni dispositivo:</strong><br>
+                        Piattaforma: ${locationData.platform}<br>
+                        Schermo: ${locationData.screenWidth}x${locationData.screenHeight}<br>
+                        Lingua: ${locationData.language}<br><br>
+                        
+                        <strong>🔗 Link utili:</strong><br>
+                        <a href="${locationData.googleMapsLink}" target="_blank">📍 Visualizza su Google Maps</a><br><br>
+                        
+                        <strong>🎯 Session ID:</strong><br>
+                        <code>${locationData.sessionId}</code><br><br>
+                        
+                        <strong>💡 Per il prof:</strong> Tutti i dati tecnici dettagliati sono visibili nella Console del browser (F12)
                     `;
-                    locationDiv.style.display = 'block';
+                    displayDiv.style.display = 'block';
                     
-                    // Simula l'invio al server (qui useresti un vero endpoint)
-                    sendLocationToServer(locationData);
-                    
-                    showStatus("✅ Posizione condivisa con successo!", "success");
+                    showStatus("✅ Posizione raccolta e inviata con successo!", "success");
                     button.disabled = false;
+                    
+                    // Alert per essere sicuri che l'utente veda
+                    setTimeout(() => {
+                        alert('✅ Posizione condivisa!\n\n📍 ' + locationData.latitude + ', ' + locationData.longitude + '\n🎯 Vedi Console (F12) per tutti i dettagli!');
+                    }, 1000);
                 },
                 function(error) {
                     button.disabled = false;
@@ -172,20 +236,25 @@
                     
                     switch(error.code) {
                         case error.PERMISSION_DENIED:
-                            errorMessage = "❌ Permesso negato. Non posso accedere alla posizione.";
+                            errorMessage = "❌ Permesso negato. L'utente ha rifiutato la geolocalizzazione.";
+                            console.log('🚫 ERRORE: Permesso geolocalizzazione negato');
                             break;
                         case error.POSITION_UNAVAILABLE:
-                            errorMessage = "❌ Posizione non disponibile.";
+                            errorMessage = "❌ Posizione non disponibile. GPS disattivato o segnale debole.";
+                            console.log('🚫 ERRORE: Posizione non disponibile');
                             break;
                         case error.TIMEOUT:
-                            errorMessage = "❌ Richiesta scaduta. Riprova.";
+                            errorMessage = "❌ Richiesta scaduta. Prova di nuovo.";
+                            console.log('🚫 ERRORE: Timeout geolocalizzazione');
                             break;
                         default:
-                            errorMessage = "❌ Errore sconosciuto.";
+                            errorMessage = "❌ Errore sconosciuto nella geolocalizzazione.";
+                            console.log('🚫 ERRORE: Sconosciuto', error);
                             break;
                     }
                     
                     showStatus(errorMessage, "error");
+                    console.log('🚫 Dettagli errore:', error);
                 },
                 {
                     enableHighAccuracy: true,
@@ -195,57 +264,17 @@
             );
         }
         
-        function sendLocationToServer(locationData) {
-            // METODO 1: Usando webhook.site (per test)
-            // SOSTITUISCI con il TUO URL di webhook.site
-            const webhookUrl = 'https://webhook.site/12345678-abcd-efgh-ijkl-123456789012';
-            
-            fetch(webhookUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(locationData)
-            })
-            .then(response => {
-                console.log('Dati inviati al webhook:', locationData);
-            })
-            .catch(error => {
-                console.error('Errore invio:', error);
-                // Fallback: invia via email usando un servizio
-                sendViaEmail(locationData);
-            });
-        }
-        
-        function sendViaEmail(locationData) {
-            // METODO 2: Usando EmailJS (alternativa)
-            // Questo aprirà il client email predefinito
-            const subject = encodeURIComponent('Posizione condivisa - ' + sessionId);
-            const body = encodeURIComponent(`
-Nuova posizione ricevuta:
-
-Session ID: ${locationData.sessionId}
-Latitudine: ${locationData.latitude}
-Longitudine: ${locationData.longitude}
-Precisione: ${locationData.accuracy} metri
-Timestamp: ${new Date(locationData.timestamp).toLocaleString('it-IT')}
-Google Maps: ${locationData.googleMapsLink}
-User Agent: ${locationData.userAgent}
-            `);
-            
-            // Sostituisci con la tua email
-            const mailtoLink = `mailto:tuaemail@example.com?subject=${subject}&body=${body}`;
-            
-            // Apre il client email (opzionale)
-            // window.open(mailtoLink);
-        }
-        
         function showStatus(message, type) {
             const statusDiv = document.getElementById('status');
             statusDiv.innerHTML = message;
             statusDiv.className = type;
             statusDiv.style.display = 'block';
         }
+        
+        // Mostra le informazioni iniziali
+        console.log('🎯 Sistema di geolocalizzazione attivo');
+        console.log('📱 Per raccogliere la posizione, clicca il pulsante nella pagina');
+        console.log('💡 Tutti i dati verranno mostrati qui nella console');
     </script>
 </body>
 </html>
