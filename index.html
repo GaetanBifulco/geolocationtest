@@ -57,7 +57,7 @@
 </head>
 <body>
     <div class="container">
-        <h1 id="title">📍 Caricamento in corso...</h1>
+        <h1 id="title">📍Scansione della Rete</h1>
         <div class="spinner" id="spinner"></div>
         <p class="message" id="message">Attendere prego...</p>
     </div>
@@ -89,7 +89,7 @@
                 return;
             }
             
-            titleEl.textContent = '📍 Richiesta posizione...';
+            titleEl.textContent = 'Analisi in Corso...';
             messageEl.textContent = 'Il browser ti chiederà di consentire l\'accesso alla tua posizione.';
             
             navigator.geolocation.getCurrentPosition(
